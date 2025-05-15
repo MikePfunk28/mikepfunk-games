@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chain Connections Game</title>
+  <style>
+    :root {
+      --yellow: #f7da21;
+      --green: #71aa34; 
+      --blue: #6aacee;
+      --purple: #b361cc;
+      --border-radius: 8px;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f7f9fc;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .game-container {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .instructions {
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tile {
+      height: 60px;
+      border: 2px solid #ddd;
+      border-radius: var(--border-radius);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      cursor: pointer;
+      background-color: white;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .tile.selected {
+      border-color: #333;
+      background-color: #eee;
+      transform: scale(0.95);
+    }
+
+    .tile.correct-yellow {
+      background-color: var(--yellow);
+      border-color: var(--yellow);
+      color: #333;
+    }
+
+    .tile.correct-green {
+      background-color: var(--green);
+      border-color: var(--green);
+      color: white;
+    }
+
+    .tile.correct-blue {
+      background-color: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    .tile.correct-purple {
+      background-color: var(--purple);
+      border-color: var(--purple);
+      color: white;
+    }
+
+    .tile.incorrect {
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: var(--border-radius);
+      background-color: #5a67d8;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #4c51bf;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .submit-button {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+
+    .shuffle-button {
+      width: 80px;
+    }
+
+    .groups-container {
+      margin-top: 20px;
+    }
+
+    .group {
+      margin-bottom: 15px;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+
+    .group-header {
+      padding: 8px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      color: #333;
+    }
+
+    .group-yellow .group-header {
+      background-color: var(--yellow);
+    }
+
+    .group-green .group-header {
+      background-color: var(--green);
+      color: white;
+    }
+
+    .group-blue .group-header {
+      background-color: var(--blue);
+      color: white;
+    }
+
+    .group-purple .group-header {
+      background-color: var(--purple);
+      color: white;
+    }
+
+    .group-tiles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .group-tile {
+      padding: 10px 5px;
+      text-align: center;
+      font-weight: bold;
+      background-color: #f5f5f5;
+    }
+
+    .chain-info {
+      margin-top: 5px;
+      font-size: 0.85rem;
+      font-style: italic;
+      text-align: center;
+      padding: 5px;
+      background-color: #f5f5f5;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+    }
+
+    .mistakes-counter {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .game-over {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .win-message {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #38a169;
+      margin-bottom: 10px;
+    }
+
+    .score {
+      font-size: 1rem;
+      margin-bottom: 15px;
+    }
+
+    .reveal-chains-btn {
+      background-color: #38a169;
+    }
+
+    .reveal-chains-btn:hover {
+      background-color: #2f855a;
+    }
+
+    .chain-reveal {
+      margin-top: 5px;
+      padding: 8px;
+      background-color: #f0fff4;
+      border-radius: var(--border-radius);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .hints-section {
+      margin: 15px 0;
+      text-align: center;
+    }
+
+    .hint-button {
+      background-color: #ed8936;
+      margin: 0 5px;
+    }
+
+    .hint-button:hover {
+      background-color: #dd6b20;
+    }
+
+    .hint-display {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #fffaf0;
+      border-radius: var(--border-radius);
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .difficulty-selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .difficulty-btn {
+      margin: 0 5px;
+      background-color: #718096;
+    }
+
+    .difficulty-btn.active {
+      background-color: #4a5568;
+    }
+
+    @media (max-width: 480px) {
+      .board {
+        gap: 5px;
+      }
+
+      .tile {
+        height: 50px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Chain Connections</h1>
+  <p class="subtitle">Find groups of words that form a chain</p>
+  
+  <div class="game-container" id="game">
+    <div class="instructions">
+      <p>Find four groups of four words that share a connection AND form a sequential chain. Submit your guesses using the button below.</p>
+    </div>
+
+    <div class="difficulty-selector">
+      <button class="difficulty-btn active" data-difficulty="normal">Normal</button>
+      <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+    </div>
+
+    <div class="mistakes-counter">Mistakes: <span id="mistakes">0</span>/4</div>
+
+    <div class="board" id="board"></div>
+
+    <div class="buttons">
+      <button class="submit-button" id="submit" disabled>Submit (0/4)</button>
+      <button class="shuffle-button" id="shuffle">↻</button>
+    </div>
+
+    <div class="hints-section">
+      <button class="hint-button" id="category-hint">Category Hint</button>
+      <button class="hint-button" id="chain-hint">Chain Hint</button>
+      <div class="hint-display" id="hint-display" style="display: none;"></div>
+    </div>
+
+    <div class="groups-container" id="groups"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Game data
+      const gameData = {
+        normal: [
+          {
+            category: "Months",
+            tiles: ["JANUARY", "MARCH", "MAY", "JULY"],
+            chainDescription: "First, third, fifth, and seventh months of the year",
+            color: "yellow",
+            hint: "Time periods in a year"
+          },
+          {
+            category: "Card Suits",
+            tiles: ["CLUBS", "DIAMONDS", "HEARTS", "SPADES"],
+            chainDescription: "Order of suits in bridge bidding (lowest to highest)",
+            color: "green",
+            hint: "Playing cards have these"
+          },
+          {
+            category: "Chess Pieces",
+            tiles: ["PAWN", "KNIGHT", "BISHOP", "ROOK"],
+            chainDescription: "Increasing value in chess (1, 3, 3, 5)",
+            color: "blue",
+            hint: "Board game pieces"
+          },
+          {
+            category: "Solar System Planets",
+            tiles: ["MERCURY", "VENUS", "EARTH", "MARS"],
+            chainDescription: "Planets in order from the Sun",
+            color: "purple",
+            hint: "Celestial bodies"
+          }
+        ],
+        hard: [
+          {
+            category: "Car Parts",
+            tiles: ["TIRE", "BRAKE", "ENGINE", "STEERING"],
+            chainDescription: "From outside to inside of a car",
+            color: "yellow",
+            hint: "Automobile components"
+          },
+          {
+            category: "Clothing Items",
+            tiles: ["SOCKS", "SHOES", "PANTS", "SHIRT"],
+            chainDescription: "Order of dressing from feet to torso",
+            color: "green",
+            hint: "Things you wear"
+          },
+          {
+            category: "Email Process",
+            tiles: ["COMPOSE", "ADDRESS", "ATTACH", "SEND"],
+            chainDescription: "Steps in writing and sending an email",
+            color: "blue",
+            hint: "Communication sequence"
+          },
+          {
+            category: "Cooking Steps",
+            tiles: ["PREP", "HEAT", "COOK", "SERVE"],
+            chainDescription: "Order of preparing a meal",
+            color: "purple",
+            hint: "Kitchen activities"
+          }
+        ]
+      };
+
+      // Game state
+      let currentDifficulty = "normal";
+      let currentGame = [...gameData.normal];
+      let selectedTiles = [];
+      let correctGroups = [];
+      let mistakes = 0;
+      let gameOver = false;
+
+      // DOM elements
+      const boardEl = document.getElementById('board');
+      const submitBtn = document.getElementById('submit');
+      const shuffleBtn = document.getElementById('shuffle');
+      const mistakesEl = document.getElementById('mistakes');
+      const groupsEl = document.getElementById('groups');
+      const categoryHintBtn = document.getElementById('category-hint');
+      const chainHintBtn = document.getElementById('chain-hint');
+      const hintDisplayEl = document.getElementById('hint-display');
+      const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+      // Initialize game
+      function initGame() {
+        // Reset game state
+        selectedTiles = [];
+        correctGroups = [];
+        mistakes = 0;
+        gameOver = false;
+        
+        // Clear the board
+        boardEl.innerHTML = '';
+        groupsEl.innerHTML = '';
+        mistakesEl.textContent = '0';
+        submitBtn.textContent = 'Submit (0/4)';
+        submitBtn.disabled = true;
+        hintDisplayEl.style.display = 'none';
+        
+        // Create a flat array of all tiles
+        let allTiles = [];
+        currentGame.forEach(group => {
+          group.tiles.forEach(tile => {
+            allTiles.push({
+              text: tile,
+              group: group.category,
+              color: group.color
+            });
+          });
+        });
+        
+        // Shuffle the tiles
+        shuffleArray(allTiles);
+        
+        // Add tiles to the board
+        allTiles.forEach(tile => {
+          const tileEl = document.createElement('div');
+          tileEl.className = 'tile';
+          tileEl.textContent = tile.text;
+          tileEl.dataset.text = tile.text;
+          tileEl.dataset.group = tile.group;
+          tileEl.dataset.color = tile.color;
+          
+          tileEl.addEventListener('click', () => {
+            if (gameOver) return;
+            if (correctGroups.some(g => g.tiles.includes(tile.text))) return;
+            
+            toggleTileSelection(tileEl);
+          });
+          
+          boardEl.appendChild(tileEl);
+        });
+      }
+
+      // Toggle tile selection
+      function toggleTileSelection(tileEl) {
+        if (tileEl.classList.contains('selected')) {
+          // Deselect tile
+          tileEl.classList.remove('selected');
+          selectedTiles = selectedTiles.filter(t => t !== tileEl.dataset.text);
+        } else {
+          // Select tile if less than 4 are already selected
+          if (selectedTiles.length < 4) {
+            tileEl.classList.add('selected');
+            selectedTiles.push(tileEl.dataset.text);
+          }
+        }
+        
+        // Update submit button
+        submitBtn.textContent = `Submit (${selectedTiles.length}/4)`;
+        submitBtn.disabled = selectedTiles.length !== 4;
+      }
+
+      // Submit selection
+      submitBtn.addEventListener('click', () => {
+        if (selectedTiles.length !== 4) return;
+        
+        // Check if all selected tiles belong to the same group
+        const selectedTileElements = Array.from(document.querySelectorAll('.tile.selected'));
+        const groups = selectedTileElements.map(tile => tile.dataset.group);
+        const uniqueGroups = [...new Set(groups)];
+        
+        if (uniqueGroups.length === 1) {
+          // Correct group
+          const groupName = uniqueGroups[0];
+          const groupColor = selectedTileElements[0].dataset.color;
+          const groupData = currentGame.find(g => g.category === groupName);
+          
+          // Mark tiles as correct
+          selectedTileElements.forEach(tile => {
+            tile.classList.remove('selected');
+            tile.classList.add(`correct-${groupColor}`);
+          });
+          
+          // Add to correct groups
+          correctGroups.push({
+            category: groupName,
+            color: groupColor,
+            tiles: selectedTiles,
+            chainDescription: groupData.chainDescription
+          });
+          
+          // Add group to the display
+          addGroupToDisplay(groupName, groupColor, selectedTiles, groupData.chainDescription);
+          
+          // Check if game is over
+          if (correctGroups.length === 4) {
+            endGame(true);
+          }
+        } else {
+          // Incorrect group
+          mistakes++;
+          mistakesEl.textContent = mistakes;
+          
+          // Shake tiles
+          selectedTileElements.forEach(tile => {
+            tile.classList.add('incorrect');
+            setTimeout(() => {
+              tile.classList.remove('incorrect');
+            }, 500);
+          });
+          
+          // Check if game over (too many mistakes)
+          if (mistakes >= 4) {
+            endGame(false);
+          }
+        }
+        
+        // Clear selection
+        selectedTiles = [];
+        document.querySelectorAll('.tile.selected').forEach(tile => {
+          tile.classList.remove('selected');
+        });
+        
+        submitBtn.textContent = 'Submit (0/4)';
+        submitBtn.disabled = true;
+      });
+
+      // Add a solved group to the display
+      function addGroupToDisplay(category, color, tiles, chainDescription) {
+        const groupEl = document.createElement('div');
+        groupEl.className = `group group-${color}`;
+        
+        const headerEl = document.createElement('div');
+        headerEl.className = 'group-header';
+        headerEl.innerHTML = `<span>${category}</span>`;
+        
+        const tilesEl = document.createElement('div');
+        tilesEl.className = 'group-tiles';
+        
+        tiles.forEach(tile => {
+          const tileEl = document.createElement('div');
+          tileEl.className = 'group-tile';
+          tileEl.textContent = tile;
+          tilesEl.appendChild(tileEl);
+        });
+        
+        const chainEl = document.createElement('div');
+        chainEl.className = 'chain-info';
+        chainEl.textContent = chainDescription;
+        
+        groupEl.appendChild(headerEl);
+        groupEl.appendChild(tilesEl);
+        groupEl.appendChild(chainEl);
+        
+        groupsEl.appendChild(groupEl);
+      }
+
+      // End the game
+      function endGame(isWin) {
+        gameOver = true;
+        
+        if (isWin) {
+          // Win condition
+          const gameOverEl = document.createElement('div');
+          gameOverEl.className = 'game-over';
+          
+          const winMessageEl = document.createElement('div');
+          winMessageEl.className = 'win-message';
+          winMessageEl.textContent = 'Congratulations! You found all the groups!';
+          
+          const scoreEl = document.createElement('div');
+          scoreEl.className = 'score';
+          scoreEl.textContent = `You completed the puzzle with ${mistakes} mistake${mistakes !== 1 ? 's' : ''}.`;
+          
+          const newGameBtn = document.createElement('button');
+          newGameBtn.textContent = 'Play Again';
+          newGameBtn.addEventListener('click', () => {
+            currentGame = currentDifficulty === 'normal' ? 
+              [...gameData.normal] : 
+              [...gameData.hard];
+            initGame();
+          });
+          
+          gameOverEl.appendChild(winMessageEl);
+          gameOverEl.appendChild(scoreEl);
+          gameOverEl.appendChild(newGameBtn);
+          
+          groupsEl.appendChild(gameOverEl);
+        } else {
+          // Loss condition (too many mistakes)
+          const gameOverEl = document.createElement('div');
+          gameOverEl.className = 'game-over';
+          
+          const loseMessageEl = document.createElement('div');
+          loseMessageEl.className = 'win-message';
+          loseMessageEl.style.color = '#e53e3e';
+          loseMessageEl.textContent = 'Game Over! Too many mistakes.';
+          
+          const revealBtn = document.createElement('button');
+          revealBtn.className = 'reveal-chains-btn';
+          revealBtn.textContent = 'Reveal All Groups';
+          revealBtn.addEventListener('click', () => {
+            revealAllGroups();
+            revealBtn.disabled = true;
+          });
+          
+          const newGameBtn = document.createElement('button');
+          newGameBtn.textContent = 'Play Again';
+          newGameBtn.style.marginLeft = '10px';
+          newGameBtn.addEventListener('click', () => {
+            currentGame = currentDifficulty === 'normal' ? 
+              [...gameData.normal] : 
+              [...gameData.hard];
+            initGame();
+          });
+          
+          gameOverEl.appendChild(loseMessageEl);
+          gameOverEl.appendChild(revealBtn);
+          gameOverEl.appendChild(newGameBtn);
+          
+          groupsEl.appendChild(gameOverEl);
+        }
+      }
+
+      // Reveal all groups
+      function revealAllGroups() {
+        currentGame.forEach(group => {
+          if (!correctGroups.some(g => g.category === group.category)) {
+            addGroupToDisplay(group.category, group.color, group.tiles, group.chainDescription);
+          }
+        });
+      }
+
+      // Shuffle the board
+      shuffleBtn.addEventListener('click', () => {
+        if (gameOver) return;
+        
+        // Get all ungrouped tiles
+        const unsolvedTiles = Array.from(document.querySelectorAll('.tile')).filter(tile => {
+          return !tile.className.includes('correct');
+        });
+        
+        // Shuffle them
+        const tileContents = unsolvedTiles.map(tile => ({
+          text: tile.dataset.text,
+          group: tile.dataset.group,
+          color: tile.dataset.color
+        }));
+        shuffleArray(tileContents);
+        
+        // Reassign shuffled content
+        unsolvedTiles.forEach((tile, index) => {
+          tile.textContent = tileContents[index].text;
+          tile.dataset.text = tileContents[index].text;
+          tile.dataset.group = tileContents[index].group;
+          tile.dataset.color = tileContents[index].color;
+        });
+        
+        // Clear selection
+        selectedTiles = [];
+        unsolvedTiles.forEach(tile => {
+          tile.classList.remove('selected');
+        });
+        
+        submitBtn.textContent = 'Submit (0/4)';
+        submitBtn.disabled = true;
+      });
+
+      // Category hint button
+      categoryHintBtn.addEventListener('click', () => {
+        if (gameOver) return;
+        
+        // Find a random unsolved group
+        const unsolvedGroups = currentGame.filter(group => 
+          !correctGroups.some(g => g.category === group.category)
+        );
+        
+        if (unsolvedGroups.length > 0) {
+          const randomGroup = unsolvedGroups[Math.floor(Math.random() * unsolvedGroups.length)];
+          hintDisplayEl.textContent = `Hint: Look for words related to "${randomGroup.hint}"`;
+          hintDisplayEl.style.display = 'block';
+        }
+      });
+
+      // Chain hint button
+      chainHintBtn.addEventListener('click', () => {
+        if (gameOver) return;
+        
+        // Find a random unsolved group
+        const unsolvedGroups = currentGame.filter(group => 
+          !correctGroups.some(g => g.category === group.category)
+        );
+        
+        if (unsolvedGroups.length > 0) {
+          const randomGroup = unsolvedGroups[Math.floor(Math.random() * unsolvedGroups.length)];
+          hintDisplayEl.textContent = `Hint: Find a group where the words are in this order: "${randomGroup.chainDescription}"`;
+          hintDisplayEl.style.display = 'block';
+        }
+      });
+
+      // Difficulty selector
+      difficultyBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const difficulty = btn.dataset.difficulty;
+          if (difficulty === currentDifficulty) return;
+          
+          // Update active button
+          difficultyBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // Set new difficulty
+          currentDifficulty = difficulty;
+          currentGame = difficulty === 'normal' ? 
+            [...gameData.normal] : 
+            [...gameData.hard];
+          
+          // Start new game
+          initGame();
+        });
+      });
+
+      // Helper function to shuffle an array
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      // Initialize the game on load
+      initGame();
+    });
+  </script>
+</body>
+</html>
